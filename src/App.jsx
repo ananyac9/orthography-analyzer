@@ -43,6 +43,12 @@ const LANGUAGES = {
     opacity: 0.08,
     defaultText: `Tutkijat selvittivät kehityksellisen lukemishäiriön vaikutuksia suomenkielisten lasten oikeinkirjoitustaitoihin. Yliopiston professori luennoi epäsäännöllisistä sanahahmoista. Kaksikielisyys vaikuttaa positiivisesti fonologiseen tietoisuuteen. Suomen kielen ortografia on erittäin säännönmukainen, mikä helpottaa lukemaan oppimista verrattuna syviin ortografioihin.`,
   },
+  hindi: {
+    name: "हिन्दी", flag: "🇮🇳",
+    desc: "Shallow orthography — highly consistent abugida, but complex conjunct consonants",
+    opacity: 0.15, // Usually highly regular, so lower opacity
+    defaultText: `शोधकर्ताओं ने इस बात का अध्ययन किया कि डिस्लेक्सिया से पीड़ित बच्चे जटिल शब्दों को कैसे पढ़ते हैं। हिंदी की मात्राएँ और संयुक्ताक्षर (आधा अक्षर) कभी-कभी बच्चों के लिए पढ़ना मुश्किल बना देते हैं, हालांकि इसकी वर्णमाला बहुत ही ध्वन्यात्मक (phonetic) होती है।`,
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -139,6 +145,46 @@ const SCORING = {
       if (gem && gem.length > 1) { score += gem.length * 2; reasons.push("Multiple geminates / long vowels"); }
       for (const g of ["nk","ng","ts"]) if (w.includes(g)) { score += 3; reasons.push(`Cluster ⟨${g}⟩`); }
       return { score: clamp(score), reasons, level: level(clamp(score), 32, 14) };
+    },
+  },
+  hindi: {
+    // Devanagari half-letters/conjuncts are formed using the Virama (्) character
+    cg: ["क्ष", "त्र", "ज्ञ", "श्र"], // Common complex conjuncts
+    sp: [
+      { re: /्/i, l: "Conjunct consonant (samyuktakshar)" }, // Detects the invisible joiner for half-letters
+      { re: /ृ/i, l: "Vocalic R matra" }
+    ],
+    av: {},
+    irr: new Set([]), // You can add exceptionally tricky Hindi words here
+    analyze(word) {
+      if (word.length <= 1) return { score: 0, reasons: [], level: "simple" };
+      let score = 0; const reasons = [];
+      
+      let complexFound = false;
+      for (const g of this.cg) {
+        if (word.includes(g)) { 
+          score += 15; 
+          reasons.push(`Complex conjunct ⟨${g}⟩`); 
+          complexFound = true;
+        }
+      }
+      
+      for (const p of this.sp) {
+        if (p.re.test(word)) { 
+          score += 20; 
+          reasons.push(p.l); 
+          complexFound = true;
+        }
+      }
+
+      if (word.length > 8) { 
+        score += (word.length - 8) * 3; 
+        reasons.push("Long multi-syllable word"); 
+      }
+      
+      if (complexFound && score < 30) score = 30;
+
+      return { score: clamp(score), reasons, level: level(clamp(score), 40, 20) };
     },
   },
 };
@@ -302,6 +348,26 @@ const LOCAL_NLP = {
     verrattuna: { ph: "VER-rat-tu-na", ipa: "/ˈverːɑtːunɑ/", syn: ["rinnastettuna"], why: "Two geminates ⟨rr⟩ ⟨tt⟩ — phonemically distinct length" },
     helpottaa: { ph: "HEL-pot-taa", ipa: "/ˈhelpotːɑː/", syn: ["tekee helpommaksi"], why: "Geminate ⟨tt⟩ and long vowel ⟨aa⟩ — both phonemic" },
   },
+  hindi: {
+    "डिस्लेक्सिया": { 
+      ph: "dis-LEK-see-ya", 
+      ipa: "/d̪ɪsˈlɛk.si.ja/", 
+      syn: ["पठन विकार"], 
+      why: "Contains half-s (स्) and half-k (क्) conjuncts." 
+    },
+    "अध्ययन": { 
+      ph: "adh-YU-yan", 
+      ipa: "/ə.d̪ʱjəˈjən/", 
+      syn: ["पढ़ाई"], 
+      why: "Contains half-dh (ध्) conjunct." 
+    },
+    "शोधकर्ताओं": { 
+      ph: "shodh-kur-TAA-on", 
+      ipa: "/ʃoːd̪ʱ.kəɾˈt̪ɑː.õː/", 
+      syn: ["वैज्ञानिकों"], 
+      why: "Contains half-r (र्) over top of ta." 
+    }
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -377,7 +443,7 @@ Lowercase keys.`;
 function tokenize(text) {
   return text.split(/(\s+|(?=[.,;:!?"""''()\[\]{}—–\-])|(?<=[.,;:!?"""''()\[\]{}—–\-]))/).filter(Boolean);
 }
-function isWordToken(t) { return /[a-zA-ZàâäéèêëïîôùûüÿçœæäöüßÄÖÜ]{2,}/.test(t); }
+function isWordToken(t) { return /[a-zA-ZàâäéèêëïîôùûüÿçœæäöüßÄÖÜ\u0900-\u097F]{2,}/.test(t); }
 
 function runScoring(text, language) {
   const engine = SCORING[language];
@@ -390,7 +456,7 @@ function runScoring(text, language) {
       words.push({ text: tok, type: "p", score: 0, level: "p", reasons: [] });
       continue;
     }
-    const clean = tok.replace(/[^a-zA-ZàâäéèêëïîôùûüÿçœæäöüßÄÖÜ'-]/g, "");
+    const clean = tok.replace(/[^a-zA-ZàâäéèêëïîôùûüÿçœæäöüßÄÖÜ\u0900-\u097F'-]/g, "");
     const res = engine.analyze(clean);
     words.push({ text: tok, clean, lower: clean.toLowerCase(), type: "w", ...res, nlp: null });
     total += res.score; wc++;
