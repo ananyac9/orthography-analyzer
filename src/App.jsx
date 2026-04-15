@@ -892,7 +892,7 @@ const S = {
   header: { padding: "40px 0 24px", borderBottom: "1px solid rgba(255,255,255,.05)", marginBottom: 30 },
   tag: { fontFamily: "'DM Mono',monospace", fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#847a6e", marginBottom: 8 },
   title: { fontFamily: "'Newsreader',serif", fontSize: 36, fontWeight: 400, color: "#f0ece6", margin: "0 0 8px", lineHeight: 1.1 },
-  sub: { fontSize: 13.5, color: "#847a6e", margin: 0, maxWidth: 620, lineHeight: 1.55 },
+  sub: { fontSize: 13.5, color: "#847a6e", margin: 0, maxWidth: "100%", lineHeight: 1.55 },
   lbl: { fontFamily: "'DM Mono',monospace", fontSize: 10.5, letterSpacing: ".1em", textTransform: "uppercase", color: "#6b6258", marginBottom: 0 },
   ta: { width: "100%", minHeight: 150, padding: 16, borderRadius: 10, border: "1.5px solid rgba(255,255,255,.07)", background: "rgba(255,255,255,.025)", color: "#e0dbd4", fontFamily: "'Sora',sans-serif", fontSize: 13.5, lineHeight: 1.75, resize: "vertical", outline: "none", boxSizing: "border-box", transition: "border-color .2s" },
   dash: { display: "grid", gridTemplateColumns: "250px 1fr", gap: 24, marginBottom: 30, padding: 24, background: "rgba(255,255,255,.018)", borderRadius: 14, border: "1px solid rgba(255,255,255,.04)" },
