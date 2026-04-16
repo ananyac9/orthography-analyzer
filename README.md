@@ -4,6 +4,8 @@ An NLP-based tool that analyzes the orthographies of texts, flags words with low
 
 It currently supports English, Hindi, French, German and Finnish
 
+<img width="2203" height="1274" alt="hs4112_take1" src="https://github.com/user-attachments/assets/9a218c52-e2ea-4ca5-b837-5019e1077af5" />
+
 ---
 
 ## How to Run
@@ -11,7 +13,7 @@ It currently supports English, Hindi, French, German and Finnish
 1. **Clone the repository**
    ```bash
    git clone https://github.com/ananyac9/orthography-analyzer 
-   cd ortho-analyzer
+   cd orthography-analyzer
    ```
 2. **Install Dependencies**
    ```bash
